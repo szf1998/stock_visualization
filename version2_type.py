@@ -179,6 +179,8 @@ class page1(QMainWindow):
         font1.setPointSize(18)
         self.pushButton1.setFont(font1)
         self.pushButton1.setText("Click to Visualize\nFinancial Data")
+        self.pushButton1.clicked.connect(self.pushButton1Clicked)
+
 
         #set button2
         self.pushButton_2 = QtWidgets.QPushButton(self)
@@ -189,6 +191,51 @@ class page1(QMainWindow):
         self.pushButton_2.setFont(font2)
         self.pushButton_2.setText("Click to return")
         self.pushButton_2.clicked.connect(self.close)
+        self.pushButton_2.clicked.connect(self.pushButton2Clicked)
+
+    def pushButton1Clicked(self):
+        world_gdp_data = pd.read_csv('API_NY.GDP.MKTP.CD_DS2_en_csv_v2_4251000.csv')
+        # world_gdp_data = world_gdp_data.reset_index(drop=True)
+        world_gdp = world_gdp_data.iloc[259][4:66]
+        China_gdp = world_gdp_data.iloc[40][4:66]
+        USA_gdp = world_gdp_data.iloc[251][4:66]
+        UK_gdp = world_gdp_data.iloc[81][4:66]
+        # print(Russian_gdp)
+        x = np.arange(1960, 2022, 1)
+        plt.figure()
+        plt.plot(x, world_gdp, label='World GDP data')
+        plt.plot(x, China_gdp, label='China GDP data')
+        plt.plot(x, USA_gdp, label='USA GDP data')
+        plt.plot(x, UK_gdp, label='UK GDP data')
+        plt.xlabel('Year')
+        plt.ylabel('GDP/million dollars')
+        plt.title('GDP data of world main economy')
+        plt.legend()
+        plt.savefig('World_GDP_visualization.jpg')
+
+        world_gdp_perCapital_data = pd.read_csv('API_NY.GDP.PCAP.CD_DS2_en_csv_v2_4251004.csv')
+        world_gdp_perCapital = world_gdp_perCapital_data.iloc[259][4:66]
+        China_gdp_perCapital = world_gdp_perCapital_data.iloc[40][4:66]
+        USA_gdp_perCapital = world_gdp_perCapital_data.iloc[251][4:66]
+        UK_gdp_perCapital = world_gdp_perCapital_data.iloc[81][4:66]
+        # print(world_gdp_perCapital)
+        x2 = np.arange(1960, 2022, 1)
+        plt.figure()
+        plt.plot(x2, world_gdp_perCapital, label='World GDP per capital data')
+        plt.plot(x2, China_gdp_perCapital, label='China GDP per capital data')
+        plt.plot(x2, USA_gdp_perCapital, label='USA GDP per capital data')
+        plt.plot(x2, UK_gdp_perCapital, label='UK GDP per capital data')
+        plt.xlabel('Year')
+        plt.ylabel('GDP per capital/dollars')
+        plt.title('GDP per capital data of world main economy')
+        plt.legend()
+        plt.savefig('World_GDP_perCapital_visualization.jpg')
+        self.pushButton1.setText('Financial data visualized')
+        self.pushButton1.adjustSize()
+        
+    def pushButton2Clicked(self):
+        self.pushButton1.setGeometry(QtCore.QRect(10, 10, 230, 131))
+        self.pushButton1.setText("Click to Visualize\nFinancial Data")
 
 class page2(QMainWindow):
     def __init__(self):
@@ -225,11 +272,9 @@ class page2(QMainWindow):
         self.fig_label1 = QLabel(self)
         self.fig_label1.setGeometry(300, 300, 400, 300)
 
-        self.testCloseButton = QtWidgets.QPushButton(self)
-        self.testCloseButton.clicked.connect(self.test)
-
         self.pushButton_2.setFont(font2)
         self.pushButton_2.setText("Click to return")
+        self.pushButton_2.clicked.connect(self.pushButton2Clicked)
         self.pushButton_2.clicked.connect(self.close)
 
     def pushButton1Clicked(self):
@@ -248,15 +293,19 @@ class page2(QMainWindow):
         mpf.plot(marketBenchmark, type='candle', title=f'Price change of {MARKET_BENCHMARK}', volume=True,
                  savefig=f'stock_data_{MARKET_BENCHMARK}.jpg')
         self.pushButton1.setText('Data has been downloaded')
-        print('Data has been downloaded')
+        self.pushButton1.adjustSize()
+        # print('Data has been downloaded')
 
         self.fig_label1.setStyleSheet("border: 2px solid red")# define fig_label1 in the init_Ui, click button to show
         self.fig1 = QPixmap('sharpe ratio visualization.jpg')
         self.fig_label1.setPixmap(self.fig1)
-
-    def test(self):
-        self.fig_label1.setPixmap(QPixmap(""))
+    
+    def pushButton2Clicked(self):
+        self.pushButton1.setGeometry(QtCore.QRect(10, 10, 280, 131))
+        self.pushButton1.setText("Click to Visualize\nDesinated Stock Data")
         self.fig_label1.setStyleSheet("")
+        self.fig1 = QPixmap('')
+        self.fig_label1.setPixmap(self.fig1)
 
 class page3(QMainWindow):
     def __init__(self):

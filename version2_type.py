@@ -11,17 +11,19 @@ import mplfinance as mpf
 import numpy as np
 import pandas as pd
 import statsmodels.regression.linear_model as lm
-from datetime import datetime
+import datetime
+from datetime import datetime as Dt
 
-page_horizonal = 000
-page_vertical = 000
-page_width = 1115
-page_height = 844
+page_horizonal = 50
+page_vertical = 50
+page_width = 1600
+page_height = 800
 
 RA_default = 'AAPL' # the apple stock
 MB_default = '^GSPC' # use S&P 500 index to represent the market
 SD_default = '2021-1-1'
-ED_default = '2021-3-1'
+# ED_default = '2021-3-1'
+ED_default = datetime.date.today()
 global RISKY_ASSET
 global MARKET_BENCHMARK
 global START_DATE
@@ -44,7 +46,7 @@ class MainPage(QMainWindow):
         # self.centralwidget.setObjectName("centralwidget")
 
         #set page window
-        self.setGeometry(page_vertical, page_horizonal, page_width, page_height)
+        self.setGeometry(page_vertical, page_horizonal, page_width-460, page_height)
         self.setWindowTitle('Main Page')
 
         #set lineEdit
@@ -123,7 +125,7 @@ class MainPage(QMainWindow):
         self.label_2.setGeometry(QtCore.QRect(350, 740, 431, 51))
         self.label_2.setFont(font3)
         self.label_2.setObjectName("label_2")
-        self.label_2.setText( "Developed by Zhanfei Shi S2212045")
+        self.label_2.setText("Developed by Zhanfei Shi S2212045")
 
         self.show()
 
@@ -141,11 +143,27 @@ class MainPage(QMainWindow):
         s2 = self.lineEdit_2.text()
         s3 = self.lineEdit_3.text()
         s4 = self.lineEdit_4.text()
-        RISKY_ASSET = s1  # the amazon stock
-        MARKET_BENCHMARK = s2  # use S&P 500 index to represent the market
-        START_DATE = s3
-        END_DATE = s4
+        if s1 != '': #有输入就输入，没输入就默认值
+            RISKY_ASSET = s1  # the amazon stock
+        else:
+            RISKY_ASSET = RA_default
+        if s2 != '':
+            MARKET_BENCHMARK = s2
+        else:
+            MARKET_BENCHMARK = MB_default
+        if s3 != '':
+            START_DATE = s3
+        else:
+            START_DATE = SD_default
+        if s4 != '':
+            END_DATE = s4
+        else:
+            END_DATE = ED_default
+        # MARKET_BENCHMARK = s2  # use S&P 500 index to represent the market
+        # START_DATE = s3
+        # END_DATE = s4
         self.input_button1.setText('Data Loaded')
+        self.input_button1.adjustSize()
     #reset lineEdit Data
     def inputButton2Clicked(self):
         global RISKY_ASSET
@@ -161,6 +179,7 @@ class MainPage(QMainWindow):
         START_DATE = SD_default
         END_DATE = ED_default
         self.input_button1.setText('Load Input')
+        self.input_button1.setGeometry(QtCore.QRect(740, 130, 113, 51))
 
 class page1(QMainWindow):
     def __init__(self):
@@ -193,7 +212,47 @@ class page1(QMainWindow):
         self.pushButton_2.clicked.connect(self.close)
         self.pushButton_2.clicked.connect(self.pushButton2Clicked)
 
+        #set figure label
+        self.fig_label1 = QLabel(self)
+        self.fig_label1.setGeometry(250, 100, 440, 225)
+        self.fig_label1.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label2 = QLabel(self)
+        self.fig_label2.setGeometry(700, 100, 440, 220)
+        self.fig_label2.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label3 = QLabel(self)
+        self.fig_label3.setGeometry(1150, 100, 440, 220)
+        self.fig_label3.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label4 = QLabel(self)
+        self.fig_label4.setGeometry(250, 335, 440, 220)
+        self.fig_label4.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label5 = QLabel(self)
+        self.fig_label5.setGeometry(700, 335, 440, 220)
+        self.fig_label5.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label6 = QLabel(self)
+        self.fig_label6.setGeometry(1150, 335, 440, 220)
+        self.fig_label6.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label7 = QLabel(self)
+        self.fig_label7.setGeometry(250, 570, 440, 220)
+        self.fig_label7.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label8 = QLabel(self)
+        self.fig_label8.setGeometry(700, 570, 440, 220)
+        self.fig_label8.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label9 = QLabel(self)
+        self.fig_label9.setGeometry(1150, 570, 440, 220)
+        self.fig_label9.setScaledContents(True)  # set this True to let figure fit label size
+
     def pushButton1Clicked(self):
+        # self.pushButton1.setText('Please wait a second:)')
+        # self.pushButton1.adjustSize()
+        #show gdp data
         world_gdp_data = pd.read_csv('API_NY.GDP.MKTP.CD_DS2_en_csv_v2_4251000.csv')
         # world_gdp_data = world_gdp_data.reset_index(drop=True)
         world_gdp = world_gdp_data.iloc[259][4:66]
@@ -213,6 +272,7 @@ class page1(QMainWindow):
         plt.legend()
         plt.savefig('World_GDP_visualization.jpg')
 
+        #show gdp per capital data
         world_gdp_perCapital_data = pd.read_csv('API_NY.GDP.PCAP.CD_DS2_en_csv_v2_4251004.csv')
         world_gdp_perCapital = world_gdp_perCapital_data.iloc[259][4:66]
         China_gdp_perCapital = world_gdp_perCapital_data.iloc[40][4:66]
@@ -230,12 +290,193 @@ class page1(QMainWindow):
         plt.title('GDP per capital data of world main economy')
         plt.legend()
         plt.savefig('World_GDP_perCapital_visualization.jpg')
-        self.pushButton1.setText('Financial data visualized')
+
+        #show gdp growth rate data
+        world_gdp_growth_data = pd.read_csv('API_NY.GDP.PCAP.KD.ZG_DS2_en_csv_v2_4250851.csv')
+        world_gdp_growth = world_gdp_growth_data.iloc[259][4:66]
+        China_gdp_growth = world_gdp_growth_data.iloc[40][4:66]
+        USA_gdp_growth = world_gdp_growth_data.iloc[251][4:66]
+        UK_gdp_growth = world_gdp_growth_data.iloc[81][4:66]
+        # print(world_gdp_growth)
+        x3 = np.arange(1960, 2022, 1)
+        plt.figure()
+        plt.plot(x3, world_gdp_growth, label='World GDP growth rate')
+        plt.plot(x3, China_gdp_growth, label='China GDP growth rate')
+        plt.plot(x3, USA_gdp_growth, label='USA GDP per growth rate')
+        plt.plot(x3, UK_gdp_growth, label='UK GDP per growth rate')
+        plt.xlabel('Year')
+        plt.ylabel('GDP growth rate/percent')
+        plt.title('GDP growth rate of world main economy')
+        plt.legend()
+        plt.savefig('World_GDP_growthRate_visualization.jpg')
+
+        # show world electricity consumption data
+        world_electricity_data = pd.read_csv('API_EG.USE.ELEC.KH.PC_DS2_en_csv_v2_4251643.csv')
+        world_electricity = world_electricity_data.iloc[259][4:66]
+        China_electricity = world_electricity_data.iloc[40][4:66]
+        USA_electricity = world_electricity_data.iloc[251][4:66]
+        UK_electricity = world_electricity_data.iloc[81][4:66]
+        # print(world_electricity)
+        x4 = np.arange(1960, 2022, 1)
+        plt.figure()
+        plt.plot(x4, world_electricity, label='World electricity consumption')
+        plt.plot(x4, China_electricity, label='China electricity consumption')
+        plt.plot(x4, USA_electricity, label='USA electricity consumption')
+        plt.plot(x4, UK_electricity, label='UK electricity consumption')
+        plt.xlabel('Year')
+        plt.ylabel('Electricity consumption / kW·h per capital')
+        plt.title('Electricity Consumption of world main economy')
+        plt.legend()
+        plt.savefig('World_electricity_visualization.jpg')
+
+        # show world population rate data
+        world_population_data = pd.read_csv('API_SP.POP.GROW_DS2_en_csv_v2_4251293.csv')
+        world_population = world_population_data.iloc[259][4:66]
+        China_population = world_population_data.iloc[40][4:66]
+        USA_population = world_population_data.iloc[251][4:66]
+        UK_population = world_population_data.iloc[81][4:66]
+        # print(world_population)
+        x5 = np.arange(1960, 2022, 1)
+        plt.figure()
+        plt.plot(x5, world_population, label='World population growth rate')
+        plt.plot(x5, China_population, label='China population growth rate')
+        plt.plot(x5, USA_population, label='USA population growth rate')
+        plt.plot(x5, UK_population, label='UK population growth rate')
+        plt.xlabel('Year')
+        plt.ylabel('Population growth rate / percent')
+        plt.title('Population growth rate of world main economy')
+        plt.legend()
+        plt.savefig('World_population_visualization.jpg')
+
+        # show world inflation data(GDP deflator)
+        world_inflation_data = pd.read_csv('API_NY.GDP.DEFL.KD.ZG_DS2_en_csv_v2_4250766.csv')
+        world_inflation = world_inflation_data.iloc[259][4:66]
+        China_inflation = world_inflation_data.iloc[40][4:66]
+        USA_inflation = world_inflation_data.iloc[251][4:66]
+        UK_inflation = world_inflation_data.iloc[81][4:66]
+        # print(world_inflation)
+        x6 = np.arange(1960, 2022, 1)
+        plt.figure()
+        plt.plot(x6, world_inflation, label='World inflation rate')
+        plt.plot(x6, China_inflation, label='China inflation rate')
+        plt.plot(x6, USA_inflation, label='USA inflation rate')
+        plt.plot(x6, UK_inflation, label='UK inflation rate')
+        plt.xlabel('Year')
+        plt.ylabel('Inflation rate / percent')
+        plt.title('Inflation rate of world main economy')
+        plt.legend()
+        plt.savefig('World_inflation_visualization.jpg')
+
+        #show gold data
+        start_date = '2021-1-5'
+        today = datetime.date.today()
+        latest_day = today + datetime.timedelta(days=-1)
+        # end_date = '2022-7-22'
+        Gold_data = yf.download('GLD', start=start_date, end=latest_day, group_by="ticker", proxy="127.0.0.1:33210",
+                                index_col=0, auto_adjust=True)
+        # print(Gold_data)
+        plt.figure()
+        plt.plot(Gold_data['Close'])
+        plt.xlabel('Year')
+        plt.ylabel('Gold Price/dollar')
+        plt.title(f'Gold Price from{start_date} until {today}')
+        plt.savefig(f'Gold_price_until_{today}.jpg')
+
+        #show oil data
+        start_date = '2021-1-1'
+        today = datetime.date.today()
+        # end_date = '2022-7-22'
+        Oil_data = yf.download('USO', start=start_date, end=today, group_by="ticker", proxy="127.0.0.1:33210",
+                               index_col=0, auto_adjust=True)
+        plt.figure()
+        plt.plot(Oil_data['Close'])
+        plt.xlabel('Year')
+        plt.ylabel('Oil Price/dollar')
+        plt.title(f'Oil Price from{start_date} until {today}')
+        plt.savefig(f'Oil_price_until_{today}.jpg')
+
+        # show gas data
+        start_date = '2021-1-1'
+        today = datetime.date.today()
+        # end_date = '2022-7-22'
+        Gas_data = yf.download('UNG', start=start_date, end=today, group_by="ticker", proxy="127.0.0.1:33210",
+                               index_col=0, auto_adjust=True)
+        plt.figure()
+        plt.plot(Gas_data['Close'])
+        plt.xlabel('Year')
+        plt.ylabel('Gas Price/dollar')
+        plt.title(f'Gas Price from{start_date} until {today}')
+        plt.savefig(f'Gas_price_until_{today}.jpg')
+
+        self.fig_label1.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig1 = QPixmap('World_GDP_visualization.jpg')
+        self.fig_label1.setPixmap(self.fig1)
+
+        self.fig_label2.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig2 = QPixmap('World_GDP_perCapital_visualization.jpg')
+        self.fig_label2.setPixmap(self.fig2)
+
+        self.fig_label3.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig3 = QPixmap('World_GDP_growthRate_visualization.jpg')
+        self.fig_label3.setPixmap(self.fig3)
+
+        self.fig_label4.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig4 = QPixmap('World_electricity_visualization.jpg')
+        self.fig_label4.setPixmap(self.fig4)
+
+        self.fig_label5.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig5 = QPixmap('World_population_visualization.jpg')
+        self.fig_label5.setPixmap(self.fig5)
+
+        self.fig_label6.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig6 = QPixmap('World_inflation_visualization.jpg')
+        self.fig_label6.setPixmap(self.fig6)
+
+        self.fig_label7.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig7 = QPixmap(f'Gold_price_until_{today}.jpg')
+        self.fig_label7.setPixmap(self.fig7)
+
+        self.fig_label8.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig8 = QPixmap(f'Oil_price_until_{today}.jpg')
+        self.fig_label8.setPixmap(self.fig8)
+
+        self.fig_label9.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig9 = QPixmap(f'Gas_price_until_{today}.jpg')
+        self.fig_label9.setPixmap(self.fig9)
+
+        self.pushButton1.setText('Financial data visualized\nand saved in same directory')
         self.pushButton1.adjustSize()
         
     def pushButton2Clicked(self):
         self.pushButton1.setGeometry(QtCore.QRect(10, 10, 230, 131))
         self.pushButton1.setText("Click to Visualize\nFinancial Data")
+        self.fig_label1.setStyleSheet("")
+        self.fig1 = QPixmap('')
+        self.fig_label1.setPixmap(self.fig1)
+        self.fig_label2.setStyleSheet("")
+        self.fig2 = QPixmap('')
+        self.fig_label2.setPixmap(self.fig2)
+        self.fig_label3.setStyleSheet("")
+        self.fig3 = QPixmap('')
+        self.fig_label3.setPixmap(self.fig3)
+        self.fig_label4.setStyleSheet("")
+        self.fig4 = QPixmap('')
+        self.fig_label4.setPixmap(self.fig4)
+        self.fig_label5.setStyleSheet("")
+        self.fig5 = QPixmap('')
+        self.fig_label5.setPixmap(self.fig5)
+        self.fig_label6.setStyleSheet("")
+        self.fig6 = QPixmap('')
+        self.fig_label6.setPixmap(self.fig6)
+        self.fig_label7.setStyleSheet("")
+        self.fig7 = QPixmap('')
+        self.fig_label7.setPixmap(self.fig7)
+        self.fig_label8.setStyleSheet("")
+        self.fig8 = QPixmap('')
+        self.fig_label8.setPixmap(self.fig8)
+        self.fig_label9.setStyleSheet("")
+        self.fig9 = QPixmap('')
+        self.fig_label9.setPixmap(self.fig9)
 
 class page2(QMainWindow):
     def __init__(self):
@@ -263,14 +504,14 @@ class page2(QMainWindow):
         font2.setFamily("Bradley Hand ITC")
         font2.setPointSize(18)
 
-        # fig1 = QPixmap('sharpe ratio visualization.jpg')
-        # fig_label1 = QtWidgets.QLabel(self)
-        # fig_label1.setGeometry(100, 100, 400, 300)
-        # fig_label1.setStyleSheet("border: 2px solid red")
-        # fig_label1.setPixmap(fig1)
-
+        #set figure label
         self.fig_label1 = QLabel(self)
-        self.fig_label1.setGeometry(300, 300, 400, 300)
+        self.fig_label1.setGeometry(300, 100, 600, 600)
+        self.fig_label1.setScaledContents(True) # set this True to let figure fit label size
+
+        self.fig_label2 = QLabel(self)
+        self.fig_label2.setGeometry(950, 100, 600, 600)
+        self.fig_label2.setScaledContents(True)  # set this True to let figure fit label size
 
         self.pushButton_2.setFont(font2)
         self.pushButton_2.setText("Click to return")
@@ -292,13 +533,17 @@ class page2(QMainWindow):
         marketBenchmark = marketBenchmark.drop(columns=['Adj Close'])
         mpf.plot(marketBenchmark, type='candle', title=f'Price change of {MARKET_BENCHMARK}', volume=True,
                  savefig=f'stock_data_{MARKET_BENCHMARK}.jpg')
-        self.pushButton1.setText('Data has been downloaded')
+        self.pushButton1.setText('Data has been visualized\nand saved in same directory')
         self.pushButton1.adjustSize()
         # print('Data has been downloaded')
 
         self.fig_label1.setStyleSheet("border: 2px solid red")# define fig_label1 in the init_Ui, click button to show
-        self.fig1 = QPixmap('sharpe ratio visualization.jpg')
+        self.fig1 = QPixmap(f'stock_data_{RISKY_ASSET}.jpg')
         self.fig_label1.setPixmap(self.fig1)
+
+        self.fig_label2.setStyleSheet("border: 2px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig2 = QPixmap(f'stock_data_{MARKET_BENCHMARK}.jpg')
+        self.fig_label2.setPixmap(self.fig2)
     
     def pushButton2Clicked(self):
         self.pushButton1.setGeometry(QtCore.QRect(10, 10, 280, 131))
@@ -306,6 +551,9 @@ class page2(QMainWindow):
         self.fig_label1.setStyleSheet("")
         self.fig1 = QPixmap('')
         self.fig_label1.setPixmap(self.fig1)
+        self.fig_label2.setStyleSheet("")
+        self.fig2 = QPixmap('')
+        self.fig_label2.setPixmap(self.fig2)
 
 class page3(QMainWindow):
     def __init__(self):
@@ -334,6 +582,20 @@ class page3(QMainWindow):
         font2.setPointSize(18)
         self.pushButton_2.setFont(font2)
         self.pushButton_2.setText("Click to return")
+
+        # set figure label
+        self.fig_label1 = QLabel(self)
+        self.fig_label1.setGeometry(50, 300, 650, 400)
+        self.fig_label1.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label2 = QLabel(self)
+        self.fig_label2.setGeometry(720, 300, 400, 400)
+        self.fig_label2.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label3 = QLabel(self)
+        self.fig_label3.setGeometry(1140, 300, 400, 400)
+        self.fig_label3.setScaledContents(True)  # set this True to let figure fit label size
+
         self.pushButton_2.clicked.connect(self.pushButton2Clicked)
         self.pushButton_2.clicked.connect(self.close)
 
@@ -403,9 +665,30 @@ class page3(QMainWindow):
         plt.legend()
         plt.title(f'Comparison of Volatility between {RISKY_ASSET} and {MARKET_BENCHMARK}')
         plt.savefig('Volatility Visualization.jpg')
+
+        self.fig_label1.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig1 = QPixmap('CAPM model bar chart.jpg')
+        self.fig_label1.setPixmap(self.fig1)
+        self.fig_label2.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig2 = QPixmap('sharpe ratio visualization.jpg')
+        self.fig_label2.setPixmap(self.fig2)
+        self.fig_label3.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig3 = QPixmap('Volatility Visualization.jpg')
+        self.fig_label3.setPixmap(self.fig3)
+
     def pushButton2Clicked(self):
         self.pushButton1.setGeometry(QtCore.QRect(10, 10, 260, 131))
         self.pushButton1.setText("Click to Run\nCAPM Model\non Desinated Stock")
+        #hide figure
+        self.fig_label1.setStyleSheet("")
+        self.fig1 = QPixmap('')
+        self.fig_label1.setPixmap(self.fig1)
+        self.fig_label2.setStyleSheet("")
+        self.fig2 = QPixmap('')
+        self.fig_label2.setPixmap(self.fig2)
+        self.fig_label3.setStyleSheet("")
+        self.fig3 = QPixmap('')
+        self.fig_label3.setPixmap(self.fig3)
 
 class page4(QMainWindow):
     def __init__(self):
@@ -433,6 +716,20 @@ class page4(QMainWindow):
         font2.setPointSize(18)
         self.pushButton_2.setFont(font2)
         self.pushButton_2.setText("Click to return")
+
+        # set figure label
+        self.fig_label1 = QLabel(self)
+        self.fig_label1.setGeometry(50, 300, 650, 400)
+        self.fig_label1.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label2 = QLabel(self)
+        self.fig_label2.setGeometry(720, 300, 400, 400)
+        self.fig_label2.setScaledContents(True)  # set this True to let figure fit label size
+
+        self.fig_label3 = QLabel(self)
+        self.fig_label3.setGeometry(1140, 300, 400, 400)
+        self.fig_label3.setScaledContents(True)  # set this True to let figure fit label size
+
         self.pushButton_2.clicked.connect(self.pushButton2Clicked)
         self.pushButton_2.clicked.connect(self.close)
 
@@ -461,12 +758,12 @@ class page4(QMainWindow):
 
         # 合并fama french五因子数据到yf 股票data里 yf下载的数据可能比上面得到的end_iloc要提前（yf似乎下载指定结束日期之前交易日的数据）
         for i in range(returns_3.shape[0]):
-            if datetime.strptime(returns_3['Date'][i], '%Y/%m/%d') == datetime.strptime(
+            if Dt.strptime(returns_3['Date'][i], '%Y/%m/%d') == Dt.strptime(
                     str(stockObject['Date'].iloc[0]).split(' ')[0], '%Y-%m-%d'):
                 iloc_offset_3 = i
                 print('OFFSET iteration is', iloc_offset_3)
         for i in range(returns_5.shape[0]):
-            if datetime.strptime(returns_5['Date'][i], '%Y/%m/%d') == datetime.strptime(
+            if Dt.strptime(returns_5['Date'][i], '%Y/%m/%d') == Dt.strptime(
                     str(stockObject['Date'].iloc[0]).split(' ')[0], '%Y-%m-%d'):
                 iloc_offset_5 = i
                 print('OFFSET iteration is', iloc_offset_5)
@@ -535,6 +832,16 @@ class page4(QMainWindow):
         plt.title(f'Beta value of coefficient of Fama French 5 factor of {RISKY_ASSET}')
         plt.savefig('FF5fm_coefficient_value.jpg')
 
+        self.fig_label1.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig1 = QPixmap('FF3&5fm_return.jpg')
+        self.fig_label1.setPixmap(self.fig1)
+        self.fig_label2.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig2 = QPixmap('FF3fm_coefficient_value.jpg')
+        self.fig_label2.setPixmap(self.fig2)
+        self.fig_label3.setStyleSheet("border: 1px solid red")  # define fig_label1 in the init_Ui, click button to show
+        self.fig3 = QPixmap('FF5fm_coefficient_value.jpg')
+        self.fig_label3.setPixmap(self.fig3)
+
         self.pushButton1.setText(
             f'Fama French 3 factor coefficients are:\nMkt-RF {round(beta_Mkt_RF, 5)},SMB {round(beta_SMB_3, 5)},HML {round(beta_HML, 5)}\n'
             f'Fama French 5 factor coefficients are:\nMkt-RF {round(beta_Mkt_RF, 5)},SMB {round(beta_SMB_5, 5)},HML {round(beta_HML, 5)}\n'
@@ -544,6 +851,17 @@ class page4(QMainWindow):
     def pushButton2Clicked(self):
         self.pushButton1.setText("Click to Run\nFama French Model\non Desinated Stock")
         self.pushButton1.setGeometry(QtCore.QRect(10, 10, 270, 121))
+
+        self.fig_label1.setStyleSheet("")
+        self.fig1 = QPixmap('')
+        self.fig_label1.setPixmap(self.fig1)
+        self.fig_label2.setStyleSheet("")
+        self.fig2 = QPixmap('')
+        self.fig_label2.setPixmap(self.fig2)
+        self.fig_label3.setStyleSheet("")
+        self.fig3 = QPixmap('')
+        self.fig_label3.setPixmap(self.fig3)
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     MainPage = MainPage()

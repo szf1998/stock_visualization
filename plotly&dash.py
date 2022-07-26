@@ -24,6 +24,7 @@ import statsmodels.regression.linear_model as lm
 import statsmodels.api as sm
 import datetime
 
+
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 # # app = dash.Dash(__name__)
 # page2_table_example = pd.read_csv('AAPL_stock_data.csv')
@@ -87,7 +88,7 @@ app.layout = html.Div(
                                 {'label': 'FTSE100', 'value': '^FTSE'}
                             ], value='AMZN'),
                         dcc.Graph(id='page2-graph1'),
-                        html.P('Please select how many days of stock data to display'),
+                        html.P('Please select how many days of the selected stock data to display'),
                         dcc.Dropdown(
                             id='table_drop',
                             options=[{'label': '1', 'value': 1},
@@ -113,7 +114,55 @@ app.layout = html.Div(
                 dbc.Tab(
                     [
                         html.Br(),
-                        html.P('Welcome to use CAPM model visualization tool'),
+                        html.P('Welcome to use stock comparison tool'),
+                        html.P('Please select the start date'),
+                        dbc.Input(id="page2_2_input1", placeholder="yyyy-mm-dd", type="text", value='2021-01-01'),
+                        html.P('Please select the end date'),
+                        dbc.Input(id="page2_2_input2", placeholder="yyyy-mm-dd", type="text", value='2021-12-31'),
+                        html.P('Please select the first target stock'),
+                        dcc.Dropdown(
+                            id='page2_2_dropdown1',
+                            options=[
+                                {'label': 'Coke', 'value': 'COKE'},
+                                {'label': 'Tesla', 'value': 'TSLA'},
+                                {'label': 'Apple', 'value': 'AAPL'},
+                                {'label': 'Amazon', 'value': 'AMZN'},
+                                {'label': 'MicroSoft', 'value': 'MSFT'},
+                                {'label': 'Nvidia', 'value': 'NVDA'},
+                                {'label': 'IBM', 'value': 'IBM'},
+                                {'label': 'Boeing', 'value': 'BA'},
+                                {'label': 'S&P_500', 'value': '^GSPC'},
+                                {'label': 'Nasdaq', 'value': 'NDAQ'},
+                                {'label': 'Dow_Jones', 'value': '^DJI'}
+                            ], value='AMZN'),
+                        html.P('Please select the second target stock'),
+                        dcc.Dropdown(
+                            id='page2_2_dropdown2',
+                            options=[
+                                {'label': 'Coke', 'value': 'COKE'},
+                                {'label': 'Tesla', 'value': 'TSLA'},
+                                {'label': 'Apple', 'value': 'AAPL'},
+                                {'label': 'Amazon', 'value': 'AMZN'},
+                                {'label': 'MicroSoft', 'value': 'MSFT'},
+                                {'label': 'Nvidia', 'value': 'NVDA'},
+                                {'label': 'IBM', 'value': 'IBM'},
+                                {'label': 'Boeing', 'value': 'BA'},
+                                {'label': 'S&P_500', 'value': '^GSPC'},
+                                {'label': 'Nasdaq', 'value': 'NDAQ'},
+                                {'label': 'Dow_Jones', 'value': '^DJI'}
+                            ],
+                            value='^GSPC'),
+                        dcc.Graph(id='page2_2_graph1'),
+                        dcc.Graph(id='page2_2_graph2'),
+                        dcc.Graph(id='page2_2_graph3'),
+                        dcc.Graph(id='page2_2_graph4')
+                    ],
+                    label='Stock comparison'
+                ),
+                dbc.Tab(
+                    [
+                        html.Br(),
+                        html.P('Welcome to use CAPM model visualization tool. If nothing is shown, please try other input options a few times until it works well.'),
                         html.P('Please select the interested stock'),
                         dcc.Dropdown(
                             id='page3-dropdown1',
@@ -145,7 +194,7 @@ app.layout = html.Div(
                 dbc.Tab(
                     [
                         html.Br(),
-                        html.P('Welcome to use Fama French and Q5-factor multi factor model visualization tool'),
+                        html.P('Welcome to use Fama French and Q5-factor multi factor model visualization tool. This can take a bit long, even 1 minutes, sorry for the wait.'),
                         html.P('Please select the interested stock'),
                         dcc.Dropdown(
                             id='page4-dropdown1',
@@ -177,6 +226,8 @@ app.layout = html.Div(
         style={'margin-top': '50px'}
     )
 )
+
+
 @app.callback([Output('page2_table', 'data'), Output('page2_table', 'columns')],
               [Input('page2-dropdown2', 'value'), Input('table_drop', 'value')])
 def update_page2_table(page2_input2, page2_input_table):
@@ -550,6 +601,68 @@ def update_page2_graph(page2_input1, page2_input2):
 
     return fig1, fig2, fig3, fig4, fig5, fig6, page1_fig1, page1_fig2, page1_fig3, page1_fig4, page1_fig5, page1_fig6, page1_fig7, page1_fig8, page1_fig9
 
+
+@app.callback([Output('page2_2_graph1', 'figure'), Output('page2_2_graph2', 'figure'), Output('page2_2_graph3', 'figure'), Output('page2_2_graph4', 'figure')],
+              [Input('page2_2_input1', 'value'), Input('page2_2_input2', 'value'), Input('page2_2_dropdown1', 'value'), Input('page2_2_dropdown2', 'value')])
+def update_page2_2(startDate, endDate, stock1, stock2):
+    stockData1 = yf.download(stock1, start=startDate, end=endDate, proxy="127.0.0.1:33210")
+    stockData2 = yf.download(stock2, start=startDate, end=endDate, proxy="127.0.0.1:33210")
+    stockData1['daily_ret'] = stockData1['Close'].pct_change(1)
+    stockData2['daily_ret'] = stockData2['Close'].pct_change(1)
+    # compare daily return of the chosen two stock
+    page2_2_fig1 = go.Figure(go.Scatter(
+                    x=stockData1.index,
+                    y=stockData1['daily_ret'],
+                    name=f'daily return curve of {stock1}'), layout=go.Layout(title=go.layout.Title(text=f'Comparison of  daily return of {stock1} and {stock2}'),
+                                                             xaxis_title='Date', yaxis_title='Return Rate')
+                          )
+    page2_2_fig1.add_trace(go.Scatter(
+                    x=stockData2.index,
+                    y=stockData2['daily_ret'],
+                    name = f'daily return curve of {stock2}')
+                        )
+    # compare return rate, sharpe ratio and value at risk of the chosen two stock
+    return_rate1 = stockData1['Close'].iloc[stockData1.shape[0]-1] / stockData1['Close'].iloc[0] * 100
+    return_rate2 = stockData2['Close'].iloc[stockData2.shape[0]-1] / stockData2['Close'].iloc[0] * 100
+
+    RiskFreeRate = 1.2855 / 100  # UK 1-Year Treasury Bond on 30/03/2022
+    sharpe_stock1 = (stockData1['Close'] - RiskFreeRate).mean() / (stockData1['Close'] - RiskFreeRate).std()
+    sharpe_stock2 = (stockData2['Close'] - RiskFreeRate).mean() / (stockData2['Close'] - RiskFreeRate).std()
+
+    sRate1 = stockData1['daily_ret'].iloc[1:].sort_values(ascending=True)
+    p1 = np.percentile(sRate1, (1, 5, 10), interpolation='midpoint')  # 输出分位度为1%，5%和10%即置信度99%，95%和90%时的值
+    sRate2 = stockData2['daily_ret'].iloc[1:].sort_values(ascending=True)
+    p2 = np.percentile(sRate2, (1, 5, 10), interpolation='midpoint')  # 输出分位度为1%，5%和10%即置信度99%，95%和90%时的值
+
+    # print([return_rate1, sharpe_stock1, p1[0], p1[1], p1[2]])
+    # print([return_rate2, sharpe_stock2, p2[0], p2[1], p2[2]])
+    page2_2_fig2 = go.Figure(go.Bar(x=['return rate'],
+                                    y=[return_rate1],
+                                    name=f'return rate of {stock1}'
+                                    ), layout=go.Layout(
+                            title=go.layout.Title(text=f"return rate of {stock1} and {stock2}")))
+    page2_2_fig2.add_trace(go.Bar(x=['return rate'],
+                                  y=[return_rate2],
+                                  name=f'return rate of {stock2}'))
+
+    page2_2_fig3 = go.Figure(go.Bar(x=['Sharpe ratio'],
+                                    y=[sharpe_stock1],
+                                    name=f'Sharpe ratio of {stock1}'
+                                    ), layout=go.Layout(
+        title=go.layout.Title(text=f"Sharpe Ratio of {stock1} and {stock2}")))
+    page2_2_fig3.add_trace(go.Bar(x=['Sharpe ratio'],
+                                  y=[sharpe_stock2],
+                                  name=f'Sharpe ratio of {stock2}'))
+
+    page2_2_fig4 = go.Figure(go.Bar(x=['99%', '95%', '90%'],
+                                    y=p1,
+                                    name=f'Value at Risk of {stock1}'
+                                    ), layout=go.Layout(
+        title=go.layout.Title(text=f"Value at risk on 99%, 95% and 90% of {stock1} and {stock2}")))
+    page2_2_fig4.add_trace(go.Bar(x=['99%', '95%', '90%'],
+                                  y=p2,
+                                  name=f'Value at Risk of {stock2}'))
+    return page2_2_fig1, page2_2_fig2, page2_2_fig3, page2_2_fig4
 
 @app.callback([Output('page3-graph1', 'figure'), Output('page3-graph2', 'figure')],
               [Input('page3-dropdown1', 'value'), Input('page3-dropdown2', 'value')])

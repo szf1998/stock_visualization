@@ -177,25 +177,34 @@ app.layout = html.Div(
         style={'margin-top': '50px'}
     )
 )
-
-
-@app.callback([Output('page2-graph1', 'figure'), Output('page2-graph2', 'figure'), Output('page2-graph3', 'figure'),
-               Output('page2-graph4', 'figure'), Output('page2-graph5', 'figure'), Output('page2-graph6', 'figure'),
-               Output('page2_table', 'data'), Output('page2_table', 'columns'),
-               Output('page1-graph1', 'figure'), Output('page1-graph2', 'figure'), Output('page1-graph3', 'figure'),
-               Output('page1-graph4', 'figure'), Output('page1-graph5', 'figure'), Output('page1-graph6', 'figure')
-                  , Output('page1-graph7', 'figure'), Output('page1-graph8', 'figure'), Output('page1-graph9', 'figure')],
-              [Input('page2-dropdown1', 'value'), Input('page2-dropdown2', 'value'), Input('table_drop', 'value')])
-def update_page2_graph(page2_input1, page2_input2, page2_input_table):
-    # print('page2 input1 is year ', str(page2_input1))
-    start_time = str(page2_input1)+'-01-01'
-    # print('page2 input1 is year ', start)
-    df = yf.download(page2_input2, start=start_time, proxy="127.0.0.1:33210")
-    table = df.copy(deep=True)
+@app.callback([Output('page2_table', 'data'), Output('page2_table', 'columns')],
+              [Input('page2-dropdown2', 'value'), Input('table_drop', 'value')])
+def update_page2_table(page2_input2, page2_input_table):
+    table = yf.download(page2_input2, start='2022-01-01', proxy="127.0.0.1:33210")
     table = table.iloc[table.shape[0] - page2_input_table:]
     # print('table:', table)
     table_columns = [{'name': col, 'id': col} for col in table.columns]
     table_data = table.to_dict(orient='records')
+    return table_data, table_columns
+
+
+@app.callback([Output('page2-graph1', 'figure'), Output('page2-graph2', 'figure'), Output('page2-graph3', 'figure'),
+               Output('page2-graph4', 'figure'), Output('page2-graph5', 'figure'), Output('page2-graph6', 'figure'),
+
+               Output('page1-graph1', 'figure'), Output('page1-graph2', 'figure'), Output('page1-graph3', 'figure'),
+               Output('page1-graph4', 'figure'), Output('page1-graph5', 'figure'), Output('page1-graph6', 'figure')
+                  , Output('page1-graph7', 'figure'), Output('page1-graph8', 'figure'), Output('page1-graph9', 'figure')],
+              [Input('page2-dropdown1', 'value'), Input('page2-dropdown2', 'value')])
+def update_page2_graph(page2_input1, page2_input2):
+    # print('page2 input1 is year ', str(page2_input1))
+    start_time = str(page2_input1)+'-01-01'
+    # print('page2 input1 is year ', start)
+    df = yf.download(page2_input2, start=start_time, proxy="127.0.0.1:33210")
+    # table = df.copy(deep=True)
+    # table = table.iloc[table.shape[0] - page2_input_table:]
+    # # print('table:', table)
+    # table_columns = [{'name': col, 'id': col} for col in table.columns]
+    # table_data = table.to_dict(orient='records')
 
     fig1 = go.Figure(go.Candlestick(x=df.index,
                                     open=df['Open'],
@@ -539,7 +548,7 @@ def update_page2_graph(page2_input1, page2_input2, page2_input_table):
     )
 
 
-    return fig1, fig2, fig3, fig4, fig5, fig6, table_data, table_columns, page1_fig1, page1_fig2, page1_fig3, page1_fig4, page1_fig5, page1_fig6, page1_fig7, page1_fig8, page1_fig9
+    return fig1, fig2, fig3, fig4, fig5, fig6, page1_fig1, page1_fig2, page1_fig3, page1_fig4, page1_fig5, page1_fig6, page1_fig7, page1_fig8, page1_fig9
 
 
 @app.callback([Output('page3-graph1', 'figure'), Output('page3-graph2', 'figure')],

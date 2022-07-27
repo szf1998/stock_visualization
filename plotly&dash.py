@@ -833,6 +833,11 @@ def update_page4_graph(page4_input1):
                     y = stockObject_page4['ff5fm_return'],
                     name = 'Fama French 5 factor model daily return')
                         )
+    page4_fig1.add_trace(go.Scatter(
+                    x=stockObject_page4_qFactor.index,
+                    y=stockObject_page4_qFactor['qf_return'],
+                    name='Q5-factor model daily return')
+                        )
     page4_fig2 = go.Figure(go.Bar(
                     x = ['beta_Mkt-RF', 'beta_SMB', 'beta_HML', 'alpha'],
                     y = [beta_Mkt_RF_3, beta_SMB_3, beta_HML_3, intercept3]),

@@ -605,10 +605,16 @@ class page3(QMainWindow):
         global MARKET_BENCHMARK
         global START_DATE
         global END_DATE
-        stockObject = yf.download(RISKY_ASSET, start=START_DATE, end=END_DATE, group_by="ticker",
+        try:
+            stockObject = yf.download(RISKY_ASSET, start=START_DATE, end=END_DATE, group_by="ticker",
                                   proxy="127.0.0.1:33210")  # acquire data
-        marketBenchmark = yf.download(MARKET_BENCHMARK, start=START_DATE, end=END_DATE, group_by="ticker",
+            marketBenchmark = yf.download(MARKET_BENCHMARK, start=START_DATE, end=END_DATE, group_by="ticker",
                                       proxy="127.0.0.1:33210")
+            print('data test:', stockObject.iloc[0], marketBenchmark.iloc[0])
+        except:
+            self.pushButton1.setText('yfinance package download fails, please try again')
+            self.pushButton1.adjustSize()
+            return
 
         stockObject['Close'] = stockObject['Close'] / stockObject['Close'].iloc[0]
         marketBenchmark['Close'] = marketBenchmark['Close'] / marketBenchmark['Close'].iloc[0]
@@ -743,8 +749,17 @@ class page4(QMainWindow):
         global MARKET_BENCHMARK
         global START_DATE
         global END_DATE
-        stockObject = yf.download(RISKY_ASSET, start=START_DATE, end=END_DATE, group_by="ticker",
-                                  proxy="127.0.0.1:33210", index_col=0)
+        # if Dt.strptime(END_DATE, "%Y-%m-%d %H:%M:%S") - Dt.strptime('2021-12-31 00:00:00', '%Y-%m-%d %H:%M:%S') >=0:
+        #     print('end time beyond data scope')
+        #     END_DATE = "2021-11-31"
+        # print(END_DATE)
+        try:
+            stockObject = yf.download(RISKY_ASSET, start=START_DATE, end=END_DATE, proxy="127.0.0.1:33210", group_by="ticker", index_col=0)
+            print(stockObject.iloc[0])
+        except:
+            self.pushButton1.setText('yfinance package download fails, please try again')
+            self.pushButton1.adjustSize()
+            return
         # stockObject_qFactor = yf.download(RISKY_ASSET, start=START_DATE, end=END_DATE, group_by="ticker",
         #                           proxy="127.0.0.1:33210", index_col=0)
         stockObject_qFactor = stockObject.copy(deep=True)# 复制一份给qfactor用
@@ -764,28 +779,33 @@ class page4(QMainWindow):
         stockObject.insert(stockObject.shape[1], 'CMA', 0)
         stockObject.insert(stockObject.shape[1], 'RF', 0)
 
-        # 合并fama french五因子数据到yf 股票data里 yf下载的数据可能比上面得到的end_iloc要提前（yf似乎下载指定结束日期之前交易日的数据）
-        for i in range(returns_3.shape[0]):
-            if Dt.strptime(returns_3['Date'][i], '%Y/%m/%d') == Dt.strptime(
+        try:
+            # 合并fama french五因子数据到yf 股票data里 yf下载的数据可能比上面得到的end_iloc要提前（yf似乎下载指定结束日期之前交易日的数据）
+            for i in range(returns_3.shape[0]):
+                if Dt.strptime(returns_3['Date'][i], '%Y/%m/%d') == Dt.strptime(
                     str(stockObject['Date'].iloc[0]).split(' ')[0], '%Y-%m-%d'):
-                iloc_offset_3 = i
-                print('OFFSET iteration is', iloc_offset_3)
-        for i in range(returns_5.shape[0]):
-            if Dt.strptime(returns_5['Date'][i], '%Y/%m/%d') == Dt.strptime(
+                    iloc_offset_3 = i
+                    print('OFFSET iteration is', iloc_offset_3)
+            for i in range(returns_5.shape[0]):
+                if Dt.strptime(returns_5['Date'][i], '%Y/%m/%d') == Dt.strptime(
                     str(stockObject['Date'].iloc[0]).split(' ')[0], '%Y-%m-%d'):
-                iloc_offset_5 = i
-                print('OFFSET iteration is', iloc_offset_5)
+                    iloc_offset_5 = i
+                    print('OFFSET iteration is', iloc_offset_5)
         # 然后，把stockObject那段长度之前的fama-french数据放进stockObject
 
-        for i in range(stockObject.shape[0]):
-            stockObject['Mkt-RF'].iloc[i] = returns_3['Mkt-RF'].iloc[i + iloc_offset_3]
-            stockObject['SMB_3'].iloc[i] = returns_3['SMB'].iloc[i + iloc_offset_3]
-            stockObject['SMB_5'].iloc[i] = returns_5['SMB'].iloc[i + iloc_offset_5]
-            stockObject['HML'].iloc[i] = returns_3['HML'].iloc[i + iloc_offset_3]
-            stockObject['RMW'].iloc[i] = returns_5['RMW'].iloc[i + iloc_offset_5]
-            stockObject['CMA'].iloc[i] = returns_5['CMA'].iloc[i + iloc_offset_5]
-            stockObject['RF'].iloc[i] = returns_3['RF'].iloc[i + iloc_offset_3]
-            stockObject['daily_ret'].iloc[i] -= returns_3['RF'].iloc[i + iloc_offset_3]
+            for i in range(stockObject.shape[0]):
+                stockObject['Mkt-RF'].iloc[i] = returns_3['Mkt-RF'].iloc[i + iloc_offset_3]
+                stockObject['SMB_3'].iloc[i] = returns_3['SMB'].iloc[i + iloc_offset_3]
+                stockObject['SMB_5'].iloc[i] = returns_5['SMB'].iloc[i + iloc_offset_5]
+                stockObject['HML'].iloc[i] = returns_3['HML'].iloc[i + iloc_offset_3]
+                stockObject['RMW'].iloc[i] = returns_5['RMW'].iloc[i + iloc_offset_5]
+                stockObject['CMA'].iloc[i] = returns_5['CMA'].iloc[i + iloc_offset_5]
+                stockObject['RF'].iloc[i] = returns_3['RF'].iloc[i + iloc_offset_3]
+                stockObject['daily_ret'].iloc[i] -= returns_3['RF'].iloc[i + iloc_offset_3]
+        except: #the data only support historical data earlier than 2021-12-31
+            self.pushButton1.setText('End date value error, please input an end value earlier than 2021-12-31')
+            self.pushButton1.adjustSize()
+            return
 
         # stockObject.loc[1:,'CT'] = ct.add_constant(stockObject) #ct是多元线性拟合的截距项
         x_ff3 = stockObject[['Mkt-RF', 'SMB_3', 'HML']].iloc[1:]

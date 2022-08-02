@@ -160,9 +160,15 @@ app.layout = html.Div(
                     label='Stock comparison'
                 ),
                 dbc.Tab(
+
                     [
                         html.Br(),
                         html.P('Welcome to use CAPM model visualization tool. If nothing is shown, please try other input options a few times until it works well.'),
+                        html.P('Please select the start date'),
+                        dbc.Input(id="page3_input1", placeholder="yyyy-mm-dd", type="text", value='2021-01-01'),
+                        html.P('Please select the end date'),
+                        dbc.Input(id="page3_input2", placeholder="yyyy-mm-dd", type="text", value='2021-12-31'),
+                        html.P('Please select the first target stock'),
                         html.P('Please select the interested stock'),
                         dcc.Dropdown(
                             id='page3-dropdown1',
@@ -665,15 +671,15 @@ def update_page2_2(startDate, endDate, stock1, stock2):
     return page2_2_fig1, page2_2_fig2, page2_2_fig3, page2_2_fig4
 
 @app.callback([Output('page3-graph1', 'figure'), Output('page3-graph2', 'figure')],
-              [Input('page3-dropdown1', 'value'), Input('page3-dropdown2', 'value')])
-def update_page3_graph(input1, input2):
+              [Input('page3_input1', 'value'), Input('page3_input2', 'value'), Input('page3-dropdown1', 'value'), Input('page3-dropdown2', 'value')])
+def update_page3_graph(startDate, endDate, input1, input2):
     #     page3 capm model
     RISKY_ASSET = input1
     MARKET_BENCHMARK = input2
     # print('page3_Risky', RISKY_ASSET)
     # print('page3_market', MARKET_BENCHMARK)
-    stockObject = yf.download(RISKY_ASSET, start='2020-01-01', proxy="127.0.0.1:33210")
-    marketBenchmark = yf.download(MARKET_BENCHMARK, start='2020-01-01', group_by="ticker",
+    stockObject = yf.download(RISKY_ASSET, start=startDate, end=endDate, proxy="127.0.0.1:33210")
+    marketBenchmark = yf.download(MARKET_BENCHMARK, start=startDate, end=endDate, group_by="ticker",
                                   proxy="127.0.0.1:33210")
     # print(marketBenchmark)
     stockObject['Close'] = stockObject['Close'] / stockObject['Close'].iloc[0]

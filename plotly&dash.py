@@ -16,6 +16,7 @@ from ta.trend import MACD
 from ta.momentum import StochasticOscillator
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+import plotly.express as px
 import math
 
 import sys
@@ -151,7 +152,7 @@ app.layout = html.Div(
                                 {'label': 'Nasdaq', 'value': 'NDAQ'},
                                 {'label': 'Dow_Jones', 'value': '^DJI'}
                             ],
-                            value='^GSPC'),
+                            value='BA'),
                         dcc.Graph(id='page2_2_graph1'),
                         dcc.Graph(id='page2_2_graph2'),
                         dcc.Graph(id='page2_2_graph3'),
@@ -222,7 +223,8 @@ app.layout = html.Div(
                         dcc.Graph(id='page4-graph2'),
                         dcc.Graph(id='page4-graph3'),
                         dcc.Graph(id='page4-graph4'),
-
+                        dcc.Graph(id='page4-graph5'),
+                        dcc.Graph(id='page4-graph6'),
                     ],
                     label='Fama French and Q5-factor on selected stock'
 
@@ -613,8 +615,10 @@ def update_page2_graph(page2_input1, page2_input2):
 def update_page2_2(startDate, endDate, stock1, stock2):
     stockData1 = yf.download(stock1, start=startDate, end=endDate, proxy="127.0.0.1:33210")
     stockData2 = yf.download(stock2, start=startDate, end=endDate, proxy="127.0.0.1:33210")
+    market_benchmark = yf.download('^GSPC', start=startDate, end=endDate, group_by='ticker', proxy="127.0.0.1:33210")
     stockData1['daily_ret'] = stockData1['Close'].pct_change(1)
     stockData2['daily_ret'] = stockData2['Close'].pct_change(1)
+    market_benchmark['daily_ret'] = market_benchmark['Close'].pct_change(1)
     # compare daily return of the chosen two stock
     page2_2_fig1 = go.Figure(go.Scatter(
                     x=stockData1.index,
@@ -627,18 +631,28 @@ def update_page2_2(startDate, endDate, stock1, stock2):
                     y=stockData2['daily_ret'],
                     name = f'daily return curve of {stock2}')
                         )
+    page2_2_fig1.add_trace(go.Scatter(
+        x=market_benchmark.index,
+        y=market_benchmark['daily_ret'],
+        name=f'daily return curve of S&P 500')
+    )
     # compare return rate, sharpe ratio and value at risk of the chosen two stock
     return_rate1 = stockData1['Close'].iloc[stockData1.shape[0]-1] / stockData1['Close'].iloc[0] * 100
     return_rate2 = stockData2['Close'].iloc[stockData2.shape[0]-1] / stockData2['Close'].iloc[0] * 100
+    return_market = market_benchmark['Close'].iloc[market_benchmark.shape[0] - 1] / market_benchmark['Close'].iloc[0] * 100
 
     RiskFreeRate = 1.2855 / 100  # UK 1-Year Treasury Bond on 30/03/2022
     sharpe_stock1 = (stockData1['Close'] - RiskFreeRate).mean() / (stockData1['Close'] - RiskFreeRate).std()
     sharpe_stock2 = (stockData2['Close'] - RiskFreeRate).mean() / (stockData2['Close'] - RiskFreeRate).std()
+    # print(return_market['Close'])
+    sharpe_market = (market_benchmark['Close'] - RiskFreeRate).mean() / (market_benchmark['Close'] - RiskFreeRate).std()
 
     sRate1 = stockData1['daily_ret'].iloc[1:].sort_values(ascending=True)
     p1 = np.percentile(sRate1, (1, 5, 10), interpolation='midpoint')  # 输出分位度为1%，5%和10%即置信度99%，95%和90%时的值
     sRate2 = stockData2['daily_ret'].iloc[1:].sort_values(ascending=True)
     p2 = np.percentile(sRate2, (1, 5, 10), interpolation='midpoint')  # 输出分位度为1%，5%和10%即置信度99%，95%和90%时的值
+    sRate_market = market_benchmark['daily_ret'].iloc[1:].sort_values(ascending=True)
+    p_m = np.percentile(sRate_market, (1, 5, 10), interpolation='midpoint')  # 输出分位度为1%，5%和10%即置信度99%，95%和90%时的值
 
     # print([return_rate1, sharpe_stock1, p1[0], p1[1], p1[2]])
     # print([return_rate2, sharpe_stock2, p2[0], p2[1], p2[2]])
@@ -650,6 +664,9 @@ def update_page2_2(startDate, endDate, stock1, stock2):
     page2_2_fig2.add_trace(go.Bar(x=['return rate'],
                                   y=[return_rate2],
                                   name=f'return rate of {stock2}'))
+    page2_2_fig2.add_trace(go.Bar(x=['return rate'],
+                                  y=[return_market],
+                                  name=f'return rate of S&p 500'))
 
     page2_2_fig3 = go.Figure(go.Bar(x=['Sharpe ratio'],
                                     y=[sharpe_stock1],
@@ -659,15 +676,40 @@ def update_page2_2(startDate, endDate, stock1, stock2):
     page2_2_fig3.add_trace(go.Bar(x=['Sharpe ratio'],
                                   y=[sharpe_stock2],
                                   name=f'Sharpe ratio of {stock2}'))
+    page2_2_fig3.add_trace(go.Bar(x=['Sharpe ratio'],
+                                  y=[sharpe_market],
+                                  name=f'Sharpe ratio of S&P 500'))
+    categories = ['99%', '95%', '90%']
 
-    page2_2_fig4 = go.Figure(go.Bar(x=['99%', '95%', '90%'],
-                                    y=p1,
-                                    name=f'Value at Risk of {stock1}'
-                                    ), layout=go.Layout(
-        title=go.layout.Title(text=f"Value at risk on 99%, 95% and 90% of {stock1} and {stock2}")))
-    page2_2_fig4.add_trace(go.Bar(x=['99%', '95%', '90%'],
-                                  y=p2,
-                                  name=f'Value at Risk of {stock2}'))
+    page2_2_fig4 = go.Figure(go.Scatterpolar(
+        r=p1,
+        theta=categories,
+        fill='toself',
+        name=f'Value at Risk of {stock1}')
+    )
+    page2_2_fig4.add_trace(go.Scatterpolar(
+        r=p2,
+        theta=categories,
+        fill='toself',
+        name=f'Value at Risk of {stock2}'
+    ))
+    page2_2_fig4.add_trace(go.Scatterpolar(
+        r=p_m,
+        theta=categories,
+        fill='toself',
+        name='Value at Risk of S&P 500'
+    ))
+    # page2_2_fig4 = go.Figure(go.Bar(x=['99%', '95%', '90%'],
+    #                                 y=p1,
+    #                                 name=f'Value at Risk of {stock1}'
+    #                                 ), layout=go.Layout(
+    #     title=go.layout.Title(text=f"Value at risk on 99%, 95% and 90% of {stock1} and {stock2}")))
+    # page2_2_fig4.add_trace(go.Bar(x=['99%', '95%', '90%'],
+    #                               y=p2,
+    #                               name=f'Value at Risk of {stock2}'))
+    # page2_2_fig4.add_trace(go.Bar(x=['99%', '95%', '90%'],
+    #                               y=p_m,
+    #                               name='Value at Risk of S&P 500'))
     return page2_2_fig1, page2_2_fig2, page2_2_fig3, page2_2_fig4
 
 @app.callback([Output('page3-graph1', 'figure'), Output('page3-graph2', 'figure')],
@@ -714,7 +756,7 @@ def update_page3_graph(startDate, endDate, input1, input2):
 
 
 #page4 multi factor
-@app.callback([Output('page4-graph1','figure'),Output('page4-graph2','figure'),Output('page4-graph3','figure'),Output('page4-graph4','figure')]
+@app.callback([Output('page4-graph1','figure'),Output('page4-graph2','figure'),Output('page4-graph3','figure'),Output('page4-graph4','figure'),Output('page4-graph5','figure'), Output('page4-graph6','figure')]
               ,[Input('page4-dropdown1', 'value')])
 def update_page4_graph(page4_input1):
     RISKY_ASSET = page4_input1
@@ -863,8 +905,20 @@ def update_page4_graph(page4_input1):
                            layout=go.Layout(title=go.layout.Title(text=f'Beta value of coefficient of q5 factor of {RISKY_ASSET}'),
                                                              xaxis_title='Coefficient value of q5 Factors', yaxis_title='Coefficient value')
                           )
+    #plot the radar figure
+    radar_df_ff5 = pd.DataFrame(dict(r=[beta_Mkt_RF_5, beta_SMB_5, beta_HML_5, beta_RMW, beta_CMA, intercept5],
+                                     theta=['beta_Mkt-RF', 'beta_ME', 'beta_IA', 'beta_ROE', 'beta_EG', 'alpha']))
+    page4_fig5 = px.line_polar(radar_df_ff5, r='r', theta='theta', line_close=True)
+    page4_fig5.update_traces(fill='toself')
+    page4_fig5.update_layout(title_text='radar chart of Fama French 5 factor coefficients')
 
-    return page4_fig1, page4_fig2, page4_fig3, page4_fig4
+    radar_df_q5 = pd.DataFrame(dict(r=[beta_Mkt_RF_q5, beta_ME, beta_IA, beta_ROE, beta_EG, intercept_q5],
+                                     theta=['beta_Mkt-RF', 'beta_ME', 'beta_IA', 'beta_ROE', 'beta_EG', 'alpha']))
+    page4_fig6 = px.line_polar(radar_df_q5, r='r', theta='theta', line_close=True)
+    page4_fig6.update_traces(fill='toself')
+    page4_fig6.update_layout(title_text='radar chart of q5 factor coefficients')
+
+    return page4_fig1, page4_fig2, page4_fig3, page4_fig4, page4_fig5, page4_fig6
 
 
 if __name__ == '__main__':

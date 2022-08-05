@@ -89,7 +89,7 @@ app.layout = html.Div(
                                 {'label': 'FTSE100', 'value': '^FTSE'}
                             ], value='AMZN'),
                         dcc.Graph(id='page2-graph1'),
-                        html.P('Please select how many days of the selected stock data to display'),
+                        html.P('Please select how many latest days of the selected stock data to display'),
                         dcc.Dropdown(
                             id='table_drop',
                             options=[{'label': '1', 'value': 1},
@@ -161,14 +161,13 @@ app.layout = html.Div(
                     label='Stock comparison'
                 ),
                 dbc.Tab(
-
                     [
                         html.Br(),
                         html.P('Welcome to use CAPM model visualization tool. If nothing is shown, please try other input options a few times until it works well.'),
                         html.P('Please select the start date'),
-                        dbc.Input(id="page3_input1", placeholder="yyyy-mm-dd", type="text", value='2021-01-01'),
+                        dbc.Input(id="page3_input1", placeholder="yyyy-mm-dd", type="text", value='2022-03-04'),
                         html.P('Please select the end date'),
-                        dbc.Input(id="page3_input2", placeholder="yyyy-mm-dd", type="text", value='2021-12-31'),
+                        dbc.Input(id="page3_input2", placeholder="yyyy-mm-dd", type="text", value='2022-05-17'),
                         html.P('Please select the first target stock'),
                         html.P('Please select the interested stock'),
                         dcc.Dropdown(
@@ -202,6 +201,10 @@ app.layout = html.Div(
                     [
                         html.Br(),
                         html.P('Welcome to use Fama French and Q5-factor multi factor model visualization tool. This can take a bit long, even 1 minutes, sorry for the wait.'),
+                        html.P('Please select the start date'),
+                        dbc.Input(id="page4_input1", placeholder="yyyy-mm-dd", type="text", value='2021-01-01'),
+                        html.P('Please select the end date. Due to data time range limitation, please input a date which is earlier than 2021-12-31.'),
+                        dbc.Input(id="page4_input2", placeholder="yyyy-mm-dd", type="text", value='2021-12-27'),
                         html.P('Please select the interested stock'),
                         dcc.Dropdown(
                             id='page4-dropdown1',
@@ -223,8 +226,6 @@ app.layout = html.Div(
                         dcc.Graph(id='page4-graph2'),
                         dcc.Graph(id='page4-graph3'),
                         dcc.Graph(id='page4-graph4'),
-                        dcc.Graph(id='page4-graph5'),
-                        dcc.Graph(id='page4-graph6'),
                     ],
                     label='Fama French and Q5-factor on selected stock'
 
@@ -272,7 +273,7 @@ def update_page2_graph(page2_input1, page2_input2):
                                     close=df['Close'],
                                     showlegend=False),
                      layout=go.Layout(
-                         title=go.layout.Title(text=f"Stock Price and Moving Average of {page2_input2}")))
+                         title=go.layout.Title(text=f"Stock Price and Moving Average of {page2_input2}"), xaxis_title="Year", yaxis_title='Stock Price/dollars'))
 
     # 把非交易日排除掉
     # hide weekends
@@ -311,7 +312,7 @@ def update_page2_graph(page2_input1, page2_input2):
     fig2 = go.Figure(go.Bar(x=df.index,
                             y=df['Volume'],
                             ),
-                     layout=go.Layout(title=go.layout.Title(text=f"Stock Trading Volumn of {page2_input2}")))
+                     layout=go.Layout(title=go.layout.Title(text=f"Stock Trading Volumn of {page2_input2}"), xaxis_title="Year", yaxis_title='Trading volumn/dollars'))
     # Plot MACD trace on 3rd row
     # MACD
     macd = MACD(close=df['Close'],
@@ -322,7 +323,7 @@ def update_page2_graph(page2_input1, page2_input2):
                             y=macd.macd_diff(),
                             name='MACD_DIF',
                             ),
-                     layout=go.Layout(title=go.layout.Title(text=f"MACD Indicator {page2_input2}")))
+                     layout=go.Layout(title=go.layout.Title(text=f"MACD Indicator {page2_input2}"), xaxis_title="Year", yaxis_title='MACD Indicator Value'))
     fig3.add_trace(go.Scatter(x=df.index,
                               y=macd.macd(),
                               line=dict(color='black', width=2),
@@ -345,7 +346,7 @@ def update_page2_graph(page2_input1, page2_input2):
                                 line=dict(color='black', width=2),
                                 name='stochastic'
                                 ),
-                     layout=go.Layout(title=go.layout.Title(text=f"Stochastic of {page2_input2}")))
+                     layout=go.Layout(title=go.layout.Title(text=f"Stochastic of {page2_input2}"), xaxis_title="Year", yaxis_title='Stochastic Indicator Value'))
     fig4.add_trace(go.Scatter(x=df.index,
                               y=stoch.stoch_signal(),
                               name='stochastic moving average of 3 days',
@@ -380,7 +381,7 @@ def update_page2_graph(page2_input1, page2_input2):
                                 y=df['Volatility'],
                                 line=dict(color='blue', width=1)
                                 ),
-                     layout=go.Layout(title=go.layout.Title(text=f"Volatility of {page2_input2}")))
+                     layout=go.Layout(title=go.layout.Title(text=f"Volatility curve of {page2_input2}"), xaxis_title="Year", yaxis_title='Volatility Indicator Value'))
 
     # figure6 value at risk
     df['daily_ret'] = df['Close'].pct_change(1)
@@ -390,9 +391,9 @@ def update_page2_graph(page2_input1, page2_input2):
     p = np.percentile(sRate, (1, 5, 10), interpolation='midpoint')  # 输出分位度为1%，5%和10%即置信度99%，95%和90%时的值
     print(p)  # 1%分位值为第一个-0.05377872，即根据历史数据，value at risk回报率高于-0.05377872的可能为99%
     fig6 = go.Figure(go.Bar(x=['99%', '95%', '90%'],
-                            y=p
+                            y=-p # p is negative, add minus to make it positive for better visualization effect
                             ), layout=go.Layout(
-        title=go.layout.Title(text=f"Value at risk on 99%, 95% and 90% of {page2_input2}")))
+        title=go.layout.Title(text=f"Value at risk on 99%, 95% and 90% of {page2_input2}"), xaxis_title="Year", yaxis_title='Value at Risk at the given probability'))
 
     # show gdp data
     world_gdp_data = pd.read_csv('API_NY.GDP.MKTP.CD_DS2_en_csv_v2_4251000.csv')
@@ -660,56 +661,56 @@ def update_page2_2(startDate, endDate, stock1, stock2):
                                     y=[return_rate1],
                                     name=f'return rate of {stock1}'
                                     ), layout=go.Layout(
-                            title=go.layout.Title(text=f"return rate of {stock1} and {stock2}")))
+                            title=go.layout.Title(text=f"return rate of {stock1} and {stock2}"), yaxis_title='Percent of Return Rate'))
     page2_2_fig2.add_trace(go.Bar(x=['return rate'],
                                   y=[return_rate2],
                                   name=f'return rate of {stock2}'))
     page2_2_fig2.add_trace(go.Bar(x=['return rate'],
                                   y=[return_market],
-                                  name=f'return rate of S&p 500'))
+                                  name=f'return rate of S&P 500'))
 
     page2_2_fig3 = go.Figure(go.Bar(x=['Sharpe ratio'],
                                     y=[sharpe_stock1],
                                     name=f'Sharpe ratio of {stock1}'
                                     ), layout=go.Layout(
-        title=go.layout.Title(text=f"Sharpe Ratio of {stock1} and {stock2}")))
+        title=go.layout.Title(text=f"Sharpe Ratio of {stock1} and {stock2}"), yaxis_title='Sharpe Ratio Value'))
     page2_2_fig3.add_trace(go.Bar(x=['Sharpe ratio'],
                                   y=[sharpe_stock2],
                                   name=f'Sharpe ratio of {stock2}'))
     page2_2_fig3.add_trace(go.Bar(x=['Sharpe ratio'],
                                   y=[sharpe_market],
                                   name=f'Sharpe ratio of S&P 500'))
-    categories = ['99%', '95%', '90%']
-
-    page2_2_fig4 = go.Figure(go.Scatterpolar(
-        r=p1,
-        theta=categories,
-        fill='toself',
-        name=f'Value at Risk of {stock1}')
-    )
-    page2_2_fig4.add_trace(go.Scatterpolar(
-        r=p2,
-        theta=categories,
-        fill='toself',
-        name=f'Value at Risk of {stock2}'
-    ))
-    page2_2_fig4.add_trace(go.Scatterpolar(
-        r=p_m,
-        theta=categories,
-        fill='toself',
-        name='Value at Risk of S&P 500'
-    ))
-    # page2_2_fig4 = go.Figure(go.Bar(x=['99%', '95%', '90%'],
-    #                                 y=p1,
-    #                                 name=f'Value at Risk of {stock1}'
-    #                                 ), layout=go.Layout(
-    #     title=go.layout.Title(text=f"Value at risk on 99%, 95% and 90% of {stock1} and {stock2}")))
-    # page2_2_fig4.add_trace(go.Bar(x=['99%', '95%', '90%'],
-    #                               y=p2,
-    #                               name=f'Value at Risk of {stock2}'))
-    # page2_2_fig4.add_trace(go.Bar(x=['99%', '95%', '90%'],
-    #                               y=p_m,
-    #                               name='Value at Risk of S&P 500'))
+    # categories = ['99%', '95%', '90%']
+    #
+    # page2_2_fig4 = go.Figure(go.Scatterpolar(
+    #     r=p1,
+    #     theta=categories,
+    #     fill='toself',
+    #     name=f'Value at Risk of {stock1}')
+    # )
+    # page2_2_fig4.add_trace(go.Scatterpolar(
+    #     r=p2,
+    #     theta=categories,
+    #     fill='toself',
+    #     name=f'Value at Risk of {stock2}'
+    # ))
+    # page2_2_fig4.add_trace(go.Scatterpolar(
+    #     r=p_m,
+    #     theta=categories,
+    #     fill='toself',
+    #     name='Value at Risk of S&P 500'
+    # ))
+    page2_2_fig4 = go.Figure(go.Bar(x=['99%', '95%', '90%'],
+                                    y=-p1,
+                                    name=f'Value at Risk of {stock1}'
+                                    ), layout=go.Layout(
+        title=go.layout.Title(text=f"Value at risk on 99%, 95% and 90% of {stock1} and {stock2}"), yaxis_title='Value at Risk at the given Probability'))
+    page2_2_fig4.add_trace(go.Bar(x=['99%', '95%', '90%'],
+                                  y=-p2,
+                                  name=f'Value at Risk of {stock2}'))
+    page2_2_fig4.add_trace(go.Bar(x=['99%', '95%', '90%'],
+                                  y=-p_m,
+                                  name='Value at Risk of S&P 500'))
     return page2_2_fig1, page2_2_fig2, page2_2_fig3, page2_2_fig4
 
 @app.callback([Output('page3-graph1', 'figure'), Output('page3-graph2', 'figure')],
@@ -756,14 +757,14 @@ def update_page3_graph(startDate, endDate, input1, input2):
 
 
 #page4 multi factor
-@app.callback([Output('page4-graph1','figure'),Output('page4-graph2','figure'),Output('page4-graph3','figure'),Output('page4-graph4','figure'),Output('page4-graph5','figure'), Output('page4-graph6','figure')]
-              ,[Input('page4-dropdown1', 'value')])
-def update_page4_graph(page4_input1):
+@app.callback([Output('page4-graph1','figure'),Output('page4-graph2','figure'),Output('page4-graph3','figure'),Output('page4-graph4','figure')]
+              ,[Input('page4_input1', 'value'), Input('page4_input2', 'value'),Input('page4-dropdown1', 'value')])
+def update_page4_graph(startDate, endDate, page4_input1):
     RISKY_ASSET = page4_input1
-    page4_start_date = '2019-1-1'
-    page4_end_date = '2021-12-30'
+    # page4_start_date = '2021-01-01'
+    # page4_end_date = '2021-12-30'
     # print('page4 input',page4_input1)
-    stockObject_page4 = yf.download(RISKY_ASSET, start=page4_start_date, end=page4_end_date, group_by="ticker",proxy="127.0.0.1:33210", index_col=0)
+    stockObject_page4 = yf.download(RISKY_ASSET, start=startDate, end=endDate, group_by="ticker",proxy="127.0.0.1:33210", index_col=0)
 
     stockObject_page4_qFactor = stockObject_page4.copy(deep=True)# 复制一份给qfactor用
     returns_3 = pd.read_csv('F-F_Research_Data_Factors_daily.csv', index_col=0)
@@ -893,32 +894,32 @@ def update_page4_graph(page4_input1):
                                                              xaxis_title='Coefficient value of Fama French Factors', yaxis_title='Coefficient value')
                           )
 
-    page4_fig3 = go.Figure(go.Bar(
-                    x = ['beta_Mkt-RF', 'beta_SMB', 'beta_HML', 'beta_RMW', 'beta_CMA', 'alpha'],
-                    y = [beta_Mkt_RF_5, beta_SMB_5, beta_HML_5, beta_RMW, beta_CMA, intercept5]),
-                           layout=go.Layout(title=go.layout.Title(text=f'Beta value of coefficient of Fama French 5 factor of {RISKY_ASSET}'),
-                                                             xaxis_title='Coefficient value of Fama French Factors', yaxis_title='Coefficient value')
-                          )
-    page4_fig4 = go.Figure(go.Bar(
-                    x = ['beta_Mkt-RF', 'beta_ME', 'beta_IA', 'beta_ROE', 'beta_EG', 'alpha'],
-                    y = [beta_Mkt_RF_q5, beta_ME, beta_IA, beta_ROE, beta_EG, intercept_q5]),
-                           layout=go.Layout(title=go.layout.Title(text=f'Beta value of coefficient of q5 factor of {RISKY_ASSET}'),
-                                                             xaxis_title='Coefficient value of q5 Factors', yaxis_title='Coefficient value')
-                          )
+    # page4_fig3 = go.Figure(go.Bar(
+    #                 x = ['beta_Mkt-RF', 'beta_SMB', 'beta_HML', 'beta_RMW', 'beta_CMA', 'alpha'],
+    #                 y = [beta_Mkt_RF_5, beta_SMB_5, beta_HML_5, beta_RMW, beta_CMA, intercept5]),
+    #                        layout=go.Layout(title=go.layout.Title(text=f'Beta value of coefficient of Fama French 5 factor of {RISKY_ASSET}'),
+    #                                                          xaxis_title='Coefficient value of Fama French Factors', yaxis_title='Coefficient value')
+    #                       )
+    # page4_fig4 = go.Figure(go.Bar(
+    #                 x = ['beta_Mkt-RF', 'beta_ME', 'beta_IA', 'beta_ROE', 'beta_EG', 'alpha'],
+    #                 y = [beta_Mkt_RF_q5, beta_ME, beta_IA, beta_ROE, beta_EG, intercept_q5]),
+    #                        layout=go.Layout(title=go.layout.Title(text=f'Beta value of coefficient of q5 factor of {RISKY_ASSET}'),
+    #                                                          xaxis_title='Coefficient value of q5 Factors', yaxis_title='Coefficient value')
+    #                       )
     #plot the radar figure
     radar_df_ff5 = pd.DataFrame(dict(r=[beta_Mkt_RF_5, beta_SMB_5, beta_HML_5, beta_RMW, beta_CMA, intercept5],
-                                     theta=['beta_Mkt-RF', 'beta_ME', 'beta_IA', 'beta_ROE', 'beta_EG', 'alpha']))
-    page4_fig5 = px.line_polar(radar_df_ff5, r='r', theta='theta', line_close=True)
-    page4_fig5.update_traces(fill='toself')
-    page4_fig5.update_layout(title_text='radar chart of Fama French 5 factor coefficients')
+                                     theta=['beta_Mkt-RF', 'beta_SMB', 'beta_HML', 'beta_RMW', 'beta_CMA', 'alpha']))
+    page4_fig3 = px.line_polar(radar_df_ff5, r='r', theta='theta', line_close=True)
+    page4_fig3.update_traces(fill='toself')
+    page4_fig3.update_layout(title_text='radar chart of Fama French 5 factor coefficients')
 
     radar_df_q5 = pd.DataFrame(dict(r=[beta_Mkt_RF_q5, beta_ME, beta_IA, beta_ROE, beta_EG, intercept_q5],
                                      theta=['beta_Mkt-RF', 'beta_ME', 'beta_IA', 'beta_ROE', 'beta_EG', 'alpha']))
-    page4_fig6 = px.line_polar(radar_df_q5, r='r', theta='theta', line_close=True)
-    page4_fig6.update_traces(fill='toself')
-    page4_fig6.update_layout(title_text='radar chart of q5 factor coefficients')
+    page4_fig4 = px.line_polar(radar_df_q5, r='r', theta='theta', line_close=True)
+    page4_fig4.update_traces(fill='toself')
+    page4_fig4.update_layout(title_text='radar chart of q5 factor coefficients')
 
-    return page4_fig1, page4_fig2, page4_fig3, page4_fig4, page4_fig5, page4_fig6
+    return page4_fig1, page4_fig2, page4_fig3, page4_fig4
 
 
 if __name__ == '__main__':

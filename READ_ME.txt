@@ -1,4 +1,4 @@
-version2_type.py is for PyQt5 GUI.
+version2_type_2.py is for PyQt5 GUI.
 
 Please do not mofify, move or delete F-F_Research_Data_Factors_daily.csv and F-F_Research_Data_5_Factors_2x3_daily.csv 
 cause they are the required data of the executable file test3.exe.  Please make sure the two csv files and test3.exe are in the same directory.
